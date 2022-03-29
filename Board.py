@@ -36,12 +36,35 @@ class Board:
             curpos (tuple, optional): the coordinates of the origin. Defaults to (0,0), meaning square locations are absolue.
         """
         pass
-    def getPossibleMoves(self):
+
+    def _calculatePossibleMoves(self):
+        """sets self.possibleMoves, based on the current game state.  Should be run at the start of every turn.
+        """
+
+    @property
+    def possibleMoves(self):
         """returns a tuple of tuples, representing the list of possible squares that the current player could choose.
 
         Returns:
             tuple: the possible locations to move, in the format ((x_1, y_1), (x_2, y_2), ... , (x_n, y_n))
         """
         pass
-    def isLegal(self, mov, curpos=(0,0)):
-        
+    def isLegal(self, mov: tuple, curpos: tuple = (0,0)):
+        """checks whether the given move (relative to curpos) is legal or not.
+
+        Args:
+            mov (tuple): the proposed move, relative to curpos (which defaults to absolute position)
+            curpos (tuple, optional): the current position. Defaults to (0,0), where mov will be an absolute movement.
+        """
+        pass
+    def switchTurn(self):
+        """switches the turn.  this only needs to be run if there were no possible moves, so nothing was put in.
+        This is also called by Board.put.  This is when Board._calculatePossibleMoves is run.
+        """
+        pass
+    def getToDraw(self):
+        """returns which pieces should be drawn, and their locations.
+
+        Returns:
+            dict: the info about what should be drawn, in the format {'black': ((x,y), (x,y)...), 'white': ((x,y), (x,y)....)}
+        """
