@@ -68,3 +68,24 @@ class Board:
         Returns:
             dict: the info about what should be drawn, in the format {'black': ((x,y), (x,y)...), 'white': ((x,y), (x,y)....)}
         """
+        pass
+    def __eq__(self, other):
+        """checks if other is the same board as self.
+
+        Args:
+            other (any): The other thing to check for equality.
+
+        Returns:
+            bool: whether or not other is a board that is identical to this one.
+        """
+        pass
+    def __sub__(self, other):
+        """finds the difference between two boards, and returns the difference.  Add means thigns you should add to the other board to get this one (things that were added to this before the comparison)
+
+        Args:
+            other (Board): the other board, which this function will find the differences between
+
+        Returns:
+            dict: the difference, in the format {'blackAdd': (poses), 'blackSub': (poses), 'whiteAdd': (poses), 'whiteSub': poses}
+        """
+        pass
