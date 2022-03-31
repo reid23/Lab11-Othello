@@ -4,6 +4,7 @@
 from graphics import *
 from ButtonClass import Button
 
+
 class GUI:
     
     def __init__(self):
@@ -23,13 +24,22 @@ class GUI:
                            
         self.messageBox = Rectangle(Point(-0.5, -0.75), Point(7.5, -2))
         self.messageBox.draw(self.win)
-        self.quitButton = Button(self.win, Point(3,8), 1.5, 0.75, "Click to Quit")
+        self.quitButton = Button(self.win, Point(2,8), 1.5, 0.75, "Click to Quit")
         self.quitButton.activate()
         self.playAgain = Button(self.win, Point(6,8), 1.5, 0.75, "Play Again")
+        self.message = Text(Point(3.5, -1.25), "Hi, Welcome to Othello!")
+        self.message.setFill("white")
+        self.message.draw(self.win)
 
-    def createPieces(self):
-        "Sets up the initial pieces on the board"
-        pass
+    # I dont think the gui can create the pieces because one of the parameters
+    # is the gui itself?
+##    def createPieces(self):
+##        "Sets up the initial pieces on the board"
+##        piece1 = Piece(True, 3, 4, self.win, 
+##        pass
+
+    def getWin(self):
+        return(self.win)
 
     def drawThing(self, thing, x, y):
         "Draws an object onto the board, with the thing and its coordinates \
@@ -61,8 +71,9 @@ class GUI:
         parameter being what move the player chose"
         pass
 
-def main():
-    myGUI = GUI()
-
-main()
+##def main():
+##    myGUI = GUI()
+##    piece1 = Piece(True, 3, 4, myGUI)
+##
+##main()
     

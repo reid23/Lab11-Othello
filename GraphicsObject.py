@@ -1,15 +1,18 @@
 # Hope Trygstad
 
+from graphics import *
+from GUIClass import GUI
+
 class Piece:
 
-    def __init__(self, color, x, y, win, GUI):
+    def __init__(self, color, x, y, GUI):
         self.color = color
-        self.win = win
         self.x = x
         self.y = y
         self.gui = GUI
+        self.win = self.gui.getWin()
         self.color = color
-        self.circle = Circle(Point(x, y))
+        self.circle = Circle(Point(x, y), 0.35)
         if self.color == True:
             self.circle.setFill("black")
         if self.color == False:
@@ -43,7 +46,11 @@ class Piece:
     
 
 
-   
+def main():
+    myGUI = GUI()
+    piece1 = Piece(True, 3, 4, myGUI)
+
+main()
 
         
 
