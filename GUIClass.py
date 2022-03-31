@@ -2,7 +2,7 @@
 # class for  Othello Game
 
 from graphics import *
-from Button import Button
+from ButtonClass import Button
 
 class GUI:
     
@@ -23,9 +23,9 @@ class GUI:
                            
         self.messageBox = Rectangle(Point(-0.5, -0.75), Point(7.5, -2))
         self.messageBox.draw(self.win)
-        self.quitButton = Button(self.win, Point(3,8), 2, 1, "Click to Quit")
+        self.quitButton = Button(self.win, Point(3,8), 1.5, 0.75, "Click to Quit")
         self.quitButton.activate()
-        self.playAgain = Button(self.win, Point(6,8), 2, 1, "Play Again")
+        self.playAgain = Button(self.win, Point(6,8), 1.5, 0.75, "Play Again")
 
     def createPieces(self):
         "Sets up the initial pieces on the board"
