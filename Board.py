@@ -4,7 +4,7 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-
+#test test test
 class Board:
     def __init__(self, board: list = None):
         """constructor for board.  Initializes the board in starting position if `board` isn't passed.
