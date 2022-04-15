@@ -24,16 +24,16 @@ class Board:
 
         if board!=None:
             self.board = board
-            return
-
-        self.board = [[self._empty for _ in range(8)] for _ in range(8)]
-        self.board[3][3] = self._this
-        self.board[3][4] = self._other
-        self.board[4][3] = self._other
-        self.board[4][4] = self._this
+        else:
+            self.board = [[self._empty for _ in range(8)] for _ in range(8)]
+            self.board[3][3] = self._this
+            self.board[3][4] = self._other
+            self.board[4][3] = self._other
+            self.board[4][4] = self._this
 
         self._possibleMoves = {}
         self._calculatePossibleMoves()
+        self.findEmptySquares = lambda x: self.other in x
     
     def __str__(self):
         out = ""
@@ -76,7 +76,10 @@ class Board:
         Args:
             pos (tuple): (r, c), where r and c are the coordinates of the position.
         """
-        pass
+        cp = self.copy()
+        cp.put(pos)
+        return cp
+
     def _flip(self, squares: tuple, curpos: tuple = (0, 0)):
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
         Args:
@@ -126,8 +129,23 @@ class Board:
         """
         return self.board[pos[0]][pos[1]]
     def _set(self, val: int, pos: tuple):
+        """sets the square at `pos` to `val`
+
+        Args:
+            val (int): the value to enter
+            pos (tuple): the position (c, r) to enter `val` at
+        """
         self.board[pos[0]][pos[1]] = val
-    def _isLegalDir(self, mov: tuple, dir: tuple):
+    def _findFlipsInDir(self, mov: tuple, dir: tuple):
+        """checks whether pieces can be captured in a `dir`ection for `mov`
+
+        Args:
+            mov (tuple): the proposed movement location
+            dir (tuple): the direction to check for flips in
+
+        Returns:
+            list: a list of the pieces to be flipped
+        """
         toFlip = []
         curPos = list(mov)
         while True:
@@ -148,11 +166,13 @@ class Board:
             if piece == self._other:
                 toFlip.append(curPos)
     def _isLegal(self, mov: tuple, curpos: tuple = (0,0)):
-        """checks whether the given move (relative to curpos) is legal or not.
+        """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
         Args:
             mov (tuple): the proposed move, relative to curpos (which defaults to absolute position)
             curpos (tuple, optional): the current position. Defaults to (0,0), where mov will be an absolute movement.
+        Returns:
+            list | bool: a list of squares to flip, if legal, or False, if not legal.
         """
         toFlip = []
         if curpos!=(0,0): 
@@ -161,7 +181,7 @@ class Board:
         if self._get(mov) != self._empty: return False
 
         for dir in Board.dirs:
-            toFlip+=self._isLegalDir(mov, dir)
+            toFlip+=self._findFlipsInDir(mov, dir)
         return toFlip if not not toFlip else False
     def switchTurn(self):
         """switches the turn.  this only needs to be run if there were no possible moves, so nothing was put in.
@@ -177,7 +197,12 @@ class Board:
         """
         pass
     @property
-    def boardList(self):
+    def _boardList(self):
+        """gets the raw board list. Only used by copy().
+
+        Returns:
+            list: the list describing the board
+        """
         return self.board
 
     def __eq__(self, other):
@@ -203,6 +228,13 @@ class Board:
             dict: the difference, in the format {'blackAdd': (poses), 'blackSub': (poses), 'whiteAdd': (poses), 'whiteSub': poses}
         """
         pass
+    def checkGameOver(self):
+        """checks whether the game is over, currently just by checking if any squares are empty.
+
+        Returns:
+            bool: whether all squares are full
+        """
+        return True in map(self.findEmptySquares, self.board)
 # %%
 if __name__ == '__main__':
     b=Board()
