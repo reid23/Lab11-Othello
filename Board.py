@@ -62,7 +62,7 @@ class Board:
         """places a piece at `pos`. The piece's color is the current turn.  This action toggles the turn.
 
         Args:
-            pos (tuple): (x, y), where x and y are the coordinates of the position.
+            pos (tuple): (r, c), where r and c are the coordinates of the position.
         """
         assert pos in self._possibleMoves.keys(), "Not a legal move"
         self._set(self._this, pos)
@@ -74,7 +74,7 @@ class Board:
         """the same as Board.put, except it creates a copy and puts a piece in the copy.
 
         Args:
-            pos (tuple): (x, y), where x and y are the coordinates of the position.
+            pos (tuple): (r, c), where r and c are the coordinates of the position.
         """
         pass
     def _flip(self, squares: tuple, curpos: tuple = (0, 0)):
@@ -97,18 +97,33 @@ class Board:
             for j in range(8):
                 legality = self._isLegal((i, j))
                 if not not legality: self._possibleMoves[(i, j)] = legality
+    @property
+    def pMovesVerbose(self):
+        """get the tiles flipped as well as the location of the movement
 
+        Returns:
+            dict: locations to move and tiles the flip, in the form {(r_1, c_1): [(pos), (pos)], etc.}
+        """
+        return self._possibleMoves
 
     @property
-    def possibleMoves(self):
+    def pMoves(self):
         """returns a tuple of tuples, representing the list of possible squares that the current player could choose.
 
         Returns:
-            tuple: the possible locations to move, in the format ((x_1, y_1), (x_2, y_2), ... , (x_n, y_n))
+            tuple: the possible locations to move, in the format ((r_1, c_1), (r_2, c_2), ... , (r_n, c_n))
         """
         return tuple(self._possibleMoves.keys())
     
     def _get(self, pos: tuple):
+        """gets the raw number at a position
+
+        Args:
+            pos (tuple): the position, (r, c)
+
+        Returns:
+            int: the value
+        """
         return self.board[pos[0]][pos[1]]
     def _set(self, val: int, pos: tuple):
         self.board[pos[0]][pos[1]] = val
@@ -158,7 +173,7 @@ class Board:
         """returns which pieces should be drawn, and their locations.
 
         Returns:
-            dict: the info about what should be drawn, in the format {'black': ((x,y), (x,y)...), 'white': ((x,y), (x,y)....)}
+            dict: the info about what should be drawn, in the format {'black': ((r, c), (r, c)...), 'white': ((r, c), (r, c)....)}
         """
         pass
     @property
@@ -194,5 +209,5 @@ if __name__ == '__main__':
     while True:
         print("board:")
         print(b)
-        b.put(b.possibleMoves[int(input(f"Choose your move! The avaliable moves are:\n{b.possibleMoves}"))])
+        b.put(b.pMoves[int(input(f"Choose your move! The avaliable moves are:\n{b.pMoves}"))])
         print("\n\nnext turn!")
