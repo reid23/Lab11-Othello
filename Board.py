@@ -10,21 +10,17 @@ class Board:
              ( 0, -1),           ( 0,  1),
              ( 1, -1), ( 1,  0), ( 1,  1)]
 
-    def __init__(self, board: list = None, curColor: list = None):
+    def __init__(self, board: list = None):
         """constructor for board.  Initializes the board in starting position if `board` isn't passed.
 
         Args:
             board (list, optional): the board condition.  Do not pass, only used by the copy method. Defaults to None.
-            curColor (list, optional): the current color lut.  do not pass, only used by the copy method.  Defaults to None.
         """
         self._this =  0 #you are this, other is other
         self._other = 1
         self._empty = 2
 
-        if curColor!=None:
-            self.curColor = curColor
-        else:
-            self.curColor = ["●", "◯", "-"]
+        self.colors = ["●", "◯", "-"]
 
         if board!=None:
             self.board = board
@@ -36,13 +32,14 @@ class Board:
         self.board[4][3] = self._other
         self.board[4][4] = self._this
 
-        self._possibleMoves = ()
+        self._possibleMoves = {}
+        self._calculatePossibleMoves()
     
     def __str__(self):
         out = ""
         for row in self.board:
             for val in row:
-                out += self.curColor[val] + "  "
+                out += self.colors[val] + "  "
             out += "\n"
         return out[:-1]
     def __repr__(self):
@@ -50,7 +47,7 @@ class Board:
         out += f"Board(board = [{self.board[0]}"
         for row in self.board[1:]:
             out += f"\n                {row}"
-        out += f"], curColor = {self.curColor})"
+        out += f"], curColor = {self.colors})"
         return out
 
     def copy(self):
@@ -59,7 +56,7 @@ class Board:
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(self.board, self.curColor)
+        return Board(self.board, self.colors)
 
     def put(self, pos: tuple):
         """places a piece at `pos`. The piece's color is the current turn.  This action toggles the turn.
@@ -67,8 +64,10 @@ class Board:
         Args:
             pos (tuple): (x, y), where x and y are the coordinates of the position.
         """
-        assert pos in self.possibleMoves, "Not a legal move"
+        assert pos in self._possibleMoves.keys(), "Not a legal move"
         self._set(self._this, pos)
+        self._flip(self._possibleMoves[pos])
+        self.switchTurn()
         
 
     def putCopy(self, pos: tuple):
@@ -93,12 +92,11 @@ class Board:
     def _calculatePossibleMoves(self):
         """sets self._possibleMoves, based on the current game state.  Should be run at the start of every turn.
         """
-        self._possibleMoves = []
+        self._possibleMoves = {}
         for i in range(8):
             for j in range(8):
-                legality = self.isLegal((i, j))
+                legality = self._isLegal((i, j))
                 if not not legality: self._possibleMoves[(i, j)] = legality
-        self._possibleMoves = tuple(self._possibleMoves)
 
 
     @property
@@ -108,13 +106,13 @@ class Board:
         Returns:
             tuple: the possible locations to move, in the format ((x_1, y_1), (x_2, y_2), ... , (x_n, y_n))
         """
-        return self._possibleMoves
+        return tuple(self._possibleMoves.keys())
     
     def _get(self, pos: tuple):
         return self.board[pos[0]][pos[1]]
     def _set(self, val: int, pos: tuple):
         self.board[pos[0]][pos[1]] = val
-    def isLegalDir(self, mov: tuple, dir: tuple):
+    def _isLegalDir(self, mov: tuple, dir: tuple):
         toFlip = []
         curPos = list(mov)
         while True:
@@ -134,7 +132,7 @@ class Board:
 
             if piece == self._other:
                 toFlip.append(curPos)
-    def isLegal(self, mov: tuple, curpos: tuple = (0,0)):
+    def _isLegal(self, mov: tuple, curpos: tuple = (0,0)):
         """checks whether the given move (relative to curpos) is legal or not.
 
         Args:
@@ -148,14 +146,14 @@ class Board:
         if self._get(mov) != self._empty: return False
 
         for dir in Board.dirs:
-            toFlip+=self.isLegalDir(mov, dir)
+            toFlip+=self._isLegalDir(mov, dir)
         return toFlip if not not toFlip else False
     def switchTurn(self):
         """switches the turn.  this only needs to be run if there were no possible moves, so nothing was put in.
         This is also called by Board.put.  This is when Board._calculatePossibleMoves is run.
         """
-        self.curColor[0], self.curColor[1] = self.curColor[1], self.curColor[0]
         self._this, self._other = self._other, self._this
+        self._calculatePossibleMoves()
     def getToDraw(self):
         """returns which pieces should be drawn, and their locations.
 
@@ -191,3 +189,10 @@ class Board:
         """
         pass
 # %%
+if __name__ == '__main__':
+    b=Board()
+    while True:
+        print("board:")
+        print(b)
+        b.put(b.possibleMoves[int(input(f"Choose your move! The avaliable moves are:\n{b.possibleMoves}"))])
+        print("\n\nnext turn!")
