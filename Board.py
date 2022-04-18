@@ -4,7 +4,8 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-#%%
+import copy
+
 class Board:
     dirs =  [(-1, -1), (-1,  0), (-1,  1),
              ( 0, -1),           ( 0,  1),
@@ -27,15 +28,15 @@ class Board:
         self._colors = ["●", "◯", "-"] #for printing
                     #  black     empty
         if board!=None:
-            self.board = board
+            self._board = board
             self.oldBoard = None
         else:
-            self.board = [[self._empty for _ in range(8)] for _ in range(8)]
-            self.oldBoard = Board(self.board) #init to all empty
-            self.board[3][3] = self._this
-            self.board[3][4] = self._other
-            self.board[4][3] = self._other
-            self.board[4][4] = self._this
+            self._board = [[self._empty for _ in range(8)] for _ in range(8)]
+            self.oldBoard = Board(self._board) #init to all empty
+            self._board[3][3] = self._this
+            self._board[3][4] = self._other
+            self._board[4][3] = self._other
+            self._board[4][4] = self._this
 
         self._possibleMoves = {}
         self._calculatePossibleMoves()
@@ -43,20 +44,20 @@ class Board:
     
     def __str__(self):
         out = ""
-        for row in self.board:
+        for row in self._board:
             for val in row:
                 out += self._colors[val] + "  "
             out += "\n"
         return out[:-1]
     def __repr__(self):
         out = ""
-        out += f"Board(board = [{self.board[0]}"
-        for row in self.board[1:]:
+        out += f"Board(board = [{self._board[0]}"
+        for row in self._board[1:]:
             out += f"\n                {row}"
         out += f"], curColor = {self._colors})"
         return out
     def printWithMoves(self):
-        for rowNum, row in enumerate(self.board):
+        for rowNum, row in enumerate(self._board):
             for colNum, val in enumerate(row):
                 if (rowNum, colNum) in self.pMoves:
                     print(str(self.pMoves.index((rowNum, colNum))).center(2), end = " ")
@@ -73,7 +74,7 @@ class Board:
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(self.board)
+        return Board(copy.deepcopy(self._board))
 
     def put(self, pos: tuple):
         """places a piece at `pos`. The piece's color is the current turn.  This action toggles the turn.
@@ -82,6 +83,7 @@ class Board:
             pos (tuple): (r, c), where r and c are the coordinates of the position.
         """
         assert pos in self._possibleMoves.keys(), "Not a legal move"
+        self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
         self.switchTurn()
@@ -107,7 +109,7 @@ class Board:
             squares = map(sum, zip(squares, curpos)) #get absolute pos
 
         for square in squares:
-            self.board[square[0]][square[1]] = int(not self.board[square[0]][square[1]])
+            self._board[square[0]][square[1]] = int(not self._board[square[0]][square[1]])
 
     def _calculatePossibleMoves(self):
         """sets self._possibleMoves, based on the current game state.  Should be run at the start of every turn.
@@ -144,7 +146,7 @@ class Board:
         Returns:
             int: the value
         """
-        return self.board[pos[0]][pos[1]]
+        return self._board[pos[0]][pos[1]]
     def _set(self, val: int, pos: tuple):
         """sets the square at `pos` to `val`
 
@@ -152,7 +154,7 @@ class Board:
             val (int): the value to enter
             pos (tuple): the position (c, r) to enter `val` at
         """
-        self.board[pos[0]][pos[1]] = val
+        self._board[pos[0]][pos[1]] = val
     def _findFlipsInDir(self, mov: tuple, dir: tuple):
         """checks whether pieces can be captured in a `dir`ection for `mov`
 
@@ -204,7 +206,6 @@ class Board:
         """switches the turn.  this only needs to be run if there were no possible moves, so nothing was put in.
         This is also called by Board.put.  This is when Board._calculatePossibleMoves is run.
         """
-        self.oldBoard = self.copy() #set last turn's board
         self._this, self._other = self._other, self._this
         self._calculatePossibleMoves()
         self.score = False
@@ -214,15 +215,15 @@ class Board:
         Returns:
             dict: the info about what should be drawn, in the format {'black': [(r, c), (r, c)...], 'white': [(r, c), (r, c)...], 'empty': [(r, c), (r, c), ...]}
         """
-        return self - self.oldBoard
+        return self.oldBoard - self
     @property
-    def _boardList(self):
+    def board(self):
         """gets the raw board list. Only used by copy().
 
         Returns:
             list: the list describing the board
         """
-        return self.board
+        return self._board
 
     def __eq__(self, other):
         """checks if other is the same board as self.
@@ -234,7 +235,7 @@ class Board:
             bool: whether or not other is a board that is identical to this one.
         """
         try:
-            return other.boardList==self.board
+            return other.board==self._board
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
     def __sub__(self, other):
@@ -247,7 +248,7 @@ class Board:
             dict: the difference, in the format {'black': [poses], 'white': [poses], 'empty': [poses]}
         """
         if not isinstance(other, Board): raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
-        
+
         NAMES = ['black', 'white', 'empty']
         out = dict(zip(NAMES, [[],[],[],[]]))
         for i in range(8):
@@ -256,7 +257,7 @@ class Board:
                 oth = other._get((i, j))
                 if this==oth:
                     continue
-                out[oth].append((i, j))
+                out[NAMES[oth]].append((i, j))
         return out
     def checkGameOver(self):
         """checks whether the game is over, currently just by checking if any squares are empty.
@@ -264,7 +265,7 @@ class Board:
         Returns:
             bool: whether all squares are full
         """
-        if True in map(self._findEmptySquares, self.board): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
+        if True in map(self._findEmptySquares, self._board): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
             return True 
         if self.pMoves == (): #if current player's possible moves are empty
             cp = self.copy()
@@ -276,17 +277,18 @@ class Board:
         if self.score: #if score has already been calculated for this game state, don't do it again
             return self.score
         self.score = (
-            sum(list(map(lambda x: sum(list(map(lambda y: int(y==0), x))), self.board))), #find blacks
-            sum(list(map(lambda x: sum(list(map(lambda y: int(y==1), x))), self.board))), #find whites
+            sum(list(map(lambda x: sum(list(map(lambda y: int(y==0), x))), self._board))), #find blacks
+            sum(list(map(lambda x: sum(list(map(lambda y: int(y==1), x))), self._board))), #find whites
         )
         return self.score
 
-if __name__ == '__main__':
+def main():
     b=Board()
     while b.checkGameOver()==True:
         print("board:")
         b.printWithMoves()
         b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
+        print(b.getToDraw())
         print("\n\nnext turn!")
     score = b.getScore()
     if score[0]>score[1]:
@@ -297,3 +299,9 @@ if __name__ == '__main__':
         outcome = 'Black and White tied.'
     print("Game over!", outcome)
     print(f"Final Score: {score}")
+
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting.")
