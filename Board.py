@@ -175,7 +175,7 @@ class Board:
         Returns:
             int: the value
         """
-        return self._board[pos[0]][pos[1]]
+        return self._board[pos[0]][pos[1]] if (0<=pos[0]<=7 and 0<=pos[1]<=7) else -1
     def _set(self, val: int, pos: tuple[int]) -> None:
         """sets the square at `pos` to `val`
 
@@ -198,20 +198,15 @@ class Board:
         
         while True:
             mov = [mov[0]+dir[0], mov[1]+dir[1]] #move the focused square one step in `dir`
-            try:
-                piece = self._get(mov) #get the piece
-            except IndexError: #if we've reached the end of the board
+            
+            piece = self._get(mov) #get the piece
+            if piece == self._empty or piece == -1: #when mov is out of bounds or there's no piece at this square
                 return []
-
-            if piece == self._empty:
-                return []
-
             if piece == self._this: #if it's the same color, there's a bracket!  if there's no space between the two sides, though, it'll still just return an empty list.
                 return toFlip
-
             if piece == self._other:
                 toFlip.append(mov)
-                
+
     def _isLegal(self, mov: tuple[int], curpos: tuple[int] = (0,0)) -> list[tuple[int]]:
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
@@ -219,7 +214,7 @@ class Board:
             mov (tuple): the proposed move, relative to curpos (which defaults to absolute position)
             curpos (tuple, optional): the current position. Defaults to (0,0), where mov will be an absolute movement.
         Returns:
-            list: a list of squares to flip. An empty list means the move is illegal..
+            list: a list of squares to flip. An empty list means the move is illegal.
         """
         toFlip = []
         if curpos!=(0,0): 
