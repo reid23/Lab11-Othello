@@ -197,22 +197,21 @@ class Board:
         toFlip = []
         
         while True:
-            curPos = [curPos[0]+dir[0], curPos[1]+dir[1]] #move the focused square one step in `dir`
+            mov = [mov[0]+dir[0], mov[1]+dir[1]] #move the focused square one step in `dir`
             try:
-                piece = self._get(curPos)
-            except IndexError:
+                piece = self._get(mov) #get the piece
+            except IndexError: #if we've reached the end of the board
                 return []
 
             if piece == self._empty:
                 return []
 
-            if piece == self._this:
-                if not toFlip:
-                    return []
+            if piece == self._this: #if it's the same color, there's a bracket!  if there's no space between the two sides, though, it'll still just return an empty list.
                 return toFlip
 
             if piece == self._other:
-                toFlip.append(curPos)
+                toFlip.append(mov)
+                
     def _isLegal(self, mov: tuple[int], curpos: tuple[int] = (0,0)) -> list[tuple[int]]:
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
