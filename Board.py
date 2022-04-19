@@ -195,7 +195,7 @@ class Board:
             list: a list of the pieces to be flipped
         """
         toFlip = []
-        curPos = list(mov)
+        
         while True:
             curPos = [curPos[0]+dir[0], curPos[1]+dir[1]] #move the focused square one step in `dir`
             try:
@@ -224,7 +224,7 @@ class Board:
         """
         toFlip = []
         if curpos!=(0,0): 
-            mov = tuple(sum(map, zip(mov, curpos)))
+            mov = (mov[0]+curpos[0], mov[1]+curpos[1])
 
         if self._get(mov) != self._empty: return False
 
