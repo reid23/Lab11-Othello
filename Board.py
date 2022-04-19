@@ -4,12 +4,17 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-import copy
-
 class Board:
-    dirs =  [(-1, -1), (-1,  0), (-1,  1),
-             ( 0, -1),           ( 0,  1),
-             ( 1, -1), ( 1,  0), ( 1,  1)]
+    moves = [
+                (-1, -1),
+                (-1,  0),
+                (-1,  1),
+                ( 0, -1),
+                ( 0,  1),
+                ( 1, -1),
+                ( 1,  0),
+                ( 1,  1),
+            ]
 
     def __init__(self, board: list = None):
         """constructor for board.  Initializes the board in starting position if `board` isn't passed.
@@ -17,7 +22,7 @@ class Board:
         Args:
             board (list, optional): the board condition.  Do not pass, only used by the copy method. Defaults to None.
         """
-        self.score = False
+        self._score = False
         #here's how the turn switchy thing works:
         # 0 represents black, 1 represents white, and 2 represents empty.
         # when the active player changes, _this and _other are swapped.  This way, the same code still works, and the values are just inverted (from the code's point of view).
@@ -33,16 +38,21 @@ class Board:
         else:
             self._board = [[self._empty for _ in range(8)] for _ in range(8)]
             self.oldBoard = Board(self._board) #init to all empty
-            self._board[3][3] = self._this
-            self._board[3][4] = self._other
-            self._board[4][3] = self._other
-            self._board[4][4] = self._this
+            self.set(self._this,  (3, 3))
+            self.set(self._other, (3, 4))
+            self.set(self._other, (4, 3))
+            self.set(self._this,  (4, 4))
 
         self._possibleMoves = {}
         self._calculatePossibleMoves()
         self._findEmptySquares = lambda x: self._empty in x
     
     def __str__(self):
+        """human-readable string representation of this board. used by str(board), print(), etc.
+
+        Returns:
+            str: the string
+        """
         out = ""
         for row in self._board:
             for val in row:
@@ -50,6 +60,11 @@ class Board:
             out += "\n"
         return out[:-1]
     def __repr__(self):
+        """exact string representation of the constructor needed to make a copy of this object.
+
+        Returns:
+            str: the string
+        """
         out = ""
         out += f"Board(board = [{self._board[0]}"
         for row in self._board[1:]:
@@ -57,6 +72,8 @@ class Board:
         out += f"], curColor = {self._colors})"
         return out
     def printWithMoves(self):
+        """prints out the current game, with unique numers in each of the possible moves, so the user can see where they want to move.
+        """
         for rowNum, row in enumerate(self._board):
             for colNum, val in enumerate(row):
                 if (rowNum, colNum) in self.pMoves:
@@ -66,6 +83,11 @@ class Board:
             print()
     @property
     def player(self):
+        """the current active player
+
+        Returns:
+            str: the player, either 'black' or 'white'
+        """
         return ['black', 'white'][self._this]
 
     def copy(self):
@@ -74,26 +96,31 @@ class Board:
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(copy.deepcopy(self._board))
+        return Board([[i for i in j] for j in self._board]) #deep copy, slower but neccessary
 
     def put(self, pos: tuple):
-        """places a piece at `pos`. The piece's color is the current turn.  This action toggles the turn.
+        """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
 
         Args:
-            pos (tuple): (r, c), where r and c are the coordinates of the position.
+            pos (tuple): (r, c), where r and c are the coordinates of the position. If an empty tuple is passed, nothing will be placed, and the turn will be switched.
         """
-        assert pos in self._possibleMoves.keys(), "Not a legal move"
+        if pos == () == tuple(self.pMoves): #if nothing is passed, and there are no legal moves (ie player is allowed to not make a move), just switch the turn.
+            self._switchTurn()
+            return
+        assert pos in self.pMoves, "Not a legal move.  Expected move in {self.pMoves} but received {pos}."
         self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
-        self.switchTurn()
+        self._switchTurn()
         
-
     def putCopy(self, pos: tuple):
         """the same as Board.put, except it creates a copy and puts a piece in the copy.
 
         Args:
             pos (tuple): (r, c), where r and c are the coordinates of the position.
+
+        Returns:
+            Board: the copied board with the new piece
         """
         cp = self.copy()
         cp.put(pos)
@@ -101,6 +128,7 @@ class Board:
 
     def _flip(self, squares: tuple, curpos: tuple = (0, 0)):
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
+
         Args:
             squares (tuple): the location of the squares to flip, relative to curpos.
             curpos (tuple, optional): the coordinates of the origin. Defaults to (0,0), meaning square locations are absolue.
@@ -109,10 +137,10 @@ class Board:
             squares = map(sum, zip(squares, curpos)) #get absolute pos
 
         for square in squares:
-            self._board[square[0]][square[1]] = int(not self._board[square[0]][square[1]])
+            self._set(int(not self._get(square)), square)
 
     def _calculatePossibleMoves(self):
-        """sets self._possibleMoves, based on the current game state.  Should be run at the start of every turn.
+        """sets self._possibleMoves, based on the current game state. runs at the start of every turn.
         """
         self._possibleMoves = {}
         for i in range(8):
@@ -121,10 +149,10 @@ class Board:
                 if not not legality: self._possibleMoves[(i, j)] = legality
     @property
     def pMovesVerbose(self):
-        """get the tiles flipped as well as the location of the movement
+        """get the tiles flipped along with each possible move
 
         Returns:
-            dict: locations to move and tiles the flip, in the form {(r_1, c_1): [(pos), (pos)], etc.}
+            dict: locations to move and tiles that flip, in the form {(mov_row, mov_col): [(flip_row, flip_col), (flip_row, flip_col)], etc.}
         """
         return self._possibleMoves
 
@@ -199,31 +227,23 @@ class Board:
 
         if self._get(mov) != self._empty: return False
 
-        for dir in Board.dirs:
+        for dir in Board.moves:
             toFlip+=self._findFlipsInDir(mov, dir)
         return toFlip if not not toFlip else False
-    def switchTurn(self):
+    def _switchTurn(self):
         """switches the turn.  this only needs to be run if there were no possible moves, so nothing was put in.
         This is also called by Board.put.  This is when Board._calculatePossibleMoves is run.
         """
         self._this, self._other = self._other, self._this
         self._calculatePossibleMoves()
-        self.score = False
+        self._score = False
     def getToDraw(self):
         """returns which pieces should be drawn, and their locations.
 
         Returns:
             dict: the info about what should be drawn, in the format {'black': [(r, c), (r, c)...], 'white': [(r, c), (r, c)...], 'empty': [(r, c), (r, c), ...]}
         """
-        return self.oldBoard - self
-    @property
-    def board(self):
-        """gets the raw board list. Only used by copy().
-
-        Returns:
-            list: the list describing the board
-        """
-        return self._board
+        return self.oldBoard - self #uses __sub__
 
     def __eq__(self, other):
         """checks if other is the same board as self.
@@ -239,7 +259,7 @@ class Board:
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
     def __sub__(self, other):
-        """finds the difference between two boards, and returns the difference.  Add means thigns you should add to the other board to get this one (things that were added to this before the comparison)
+        """finds the difference between two boards, and returns the difference. to use, do old_board - new_board.  It will return a dict of things to set to make changes.
 
         Args:
             other (Board): the other board, which this function will find the differences between
@@ -260,7 +280,7 @@ class Board:
                 out[NAMES[oth]].append((i, j))
         return out
     def checkGameOver(self):
-        """checks whether the game is over, currently just by checking if any squares are empty.
+        """checks whether the game is over.
 
         Returns:
             bool: whether all squares are full
@@ -269,18 +289,25 @@ class Board:
             return True 
         if self.pMoves == (): #if current player's possible moves are empty
             cp = self.copy()
-            cp.switchTurn()
+            cp._switchTurn()
             if cp.pMoves == (): #and next player's possible moves are empty
                 return True  #then the game is over
         return False
-    def getScore(self):
-        if self.score: #if score has already been calculated for this game state, don't do it again
-            return self.score
-        self.score = (
+    
+    @property
+    def score(self):
+        """the current score
+
+        Returns:
+            tuple: the score, in the form (black tiles, white tiles)
+        """
+        if self._score: #if score has already been calculated for this game state, don't do it again
+            return self._score
+        self._score = (
             sum(list(map(lambda x: sum(list(map(lambda y: int(y==0), x))), self._board))), #find blacks
             sum(list(map(lambda x: sum(list(map(lambda y: int(y==1), x))), self._board))), #find whites
         )
-        return self.score
+        return self._score
 
 def main():
     b=Board()
@@ -290,7 +317,7 @@ def main():
         b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
         print(b.getToDraw())
         print("\n\nnext turn!")
-    score = b.getScore()
+    score = b.score()
     if score[0]>score[1]:
         outcome = 'Black won.'
     elif score[0]<score[1]:
@@ -299,6 +326,7 @@ def main():
         outcome = 'Black and White tied.'
     print("Game over!", outcome)
     print(f"Final Score: {score}")
+
 
 if __name__ == '__main__':
     try:
