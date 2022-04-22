@@ -4,7 +4,7 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-
+#%%
 class Board:
     MOVES = [
                 (-1, -1),
@@ -17,7 +17,7 @@ class Board:
                 ( 1,  1),
             ]
 
-    def __init__(self, board: list[list[int]] = None):
+    def __init__(self, board: 'list[list[int]]' = None):
         """constructor for board.  Initializes the board in starting position if `board` isn't passed.
 
         Args:
@@ -99,7 +99,7 @@ class Board:
         """
         return Board(list(map(list.copy, self._board))) #deep copy, slower but neccessary
 
-    def put(self, pos: tuple[int]) -> None:
+    def put(self, pos: 'tuple[int]') -> None:
         """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
 
         Args:
@@ -114,7 +114,7 @@ class Board:
         self._flip(self._possibleMoves[pos])
         self._switchTurn()
         
-    def putCopy(self, pos: tuple[int]):
+    def putCopy(self, pos: 'tuple[int]'):
         """the same as Board.put, except it creates a copy and puts a piece in the copy.
 
         Args:
@@ -127,7 +127,7 @@ class Board:
         cp.put(pos)
         return cp
 
-    def _flip(self, squares: tuple[tuple[int]], curpos: tuple[int] = (0, 0)) -> None:
+    def _flip(self, squares: 'tuple[tuple[int]]', curpos: 'tuple[int]' = (0, 0)) -> None:
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
 
         Args:
@@ -139,7 +139,7 @@ class Board:
 
         for square in squares:
             self._set(int(not self._get(square)), square)
-
+    # @profile
     def _calculatePossibleMoves(self) -> None:
         """sets self._possibleMoves, based on the current game state. runs at the start of every turn.
         """
@@ -149,7 +149,7 @@ class Board:
                 legality = self._isLegal((i, j))
                 if not not legality: self._possibleMoves[(i, j)] = legality
     @property
-    def pMovesVerbose(self) -> dict[tuple[int]: list[tuple[int]]]:
+    def pMovesVerbose(self) -> 'dict[tuple[int]: list[tuple[int]]]':
         """get the tiles flipped along with each possible move
 
         Returns:
@@ -158,7 +158,7 @@ class Board:
         return self._possibleMoves
 
     @property
-    def pMoves(self) -> list[tuple[int]]:
+    def pMoves(self) -> 'list[tuple[int]]':
         """returns a list of tuples, representing the list of possible squares that the current player could choose.
 
         Returns:
@@ -166,7 +166,7 @@ class Board:
         """
         return list(self._possibleMoves.keys())
     
-    def _get(self, pos: tuple[int]) -> int:
+    def _get(self, pos: 'tuple[int]') -> int:
         """gets the raw number at a position
 
         Args:
@@ -175,8 +175,9 @@ class Board:
         Returns:
             int: the value
         """
-        return self._board[pos[0]][pos[1]] if (0<=pos[0]<=7 and 0<=pos[1]<=7) else -1
-    def _set(self, val: int, pos: tuple[int]) -> None:
+        r, c = pos
+        return self._board[r][c] if (0<=r<=7 and 0<=c<=7) else -1
+    def _set(self, val: int, pos: 'tuple[int]') -> None:
         """sets the square at `pos` to `val`
 
         Args:
@@ -184,7 +185,10 @@ class Board:
             pos (tuple): the position (c, r) to enter `val` at
         """
         self._board[pos[0]][pos[1]] = val
-    def _findFlipsInDir(self, mov: tuple[int], dir: tuple[int]) -> list[tuple[int]]:
+    
+    # @jit
+    # @profile
+    def _findFlipsInDir(self, mov: 'tuple[int]', dir: 'tuple[int]') -> 'list[tuple[int]]':
         """checks whether pieces can be captured in a `dir`ection for `mov`
 
         Args:
@@ -195,10 +199,11 @@ class Board:
             list: a list of the pieces to be flipped
         """
         toFlip = []
+        mov = list(mov)
         
         while True:
-            mov = [mov[0]+dir[0], mov[1]+dir[1]] #move the focused square one step in `dir`
-            
+            mov = [mov[0]+dir[0], mov[1]+dir[1]]
+
             piece = self._get(mov) #get the piece
             if piece == self._empty or piece == -1: #when mov is out of bounds or there's no piece at this square
                 return []
@@ -206,8 +211,9 @@ class Board:
                 return toFlip
             if piece == self._other:
                 toFlip.append(mov)
-
-    def _isLegal(self, mov: tuple[int], curpos: tuple[int] = (0,0)) -> list[tuple[int]]:
+    # @jit
+    # @profile
+    def _isLegal(self, mov: 'tuple[int]', curpos: 'tuple[int]' = (0,0)) -> 'list[tuple[int]]':
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
         Args:
@@ -232,7 +238,7 @@ class Board:
         self._this, self._other = self._other, self._this
         self._calculatePossibleMoves()
         self._score = False
-    def getToDraw(self) -> dict[str: list[tuple[int]]]:
+    def getToDraw(self) -> 'dict[str: list[tuple[int]]]':
         """returns which pieces should be drawn, and their locations.
 
         Returns:
@@ -253,7 +259,7 @@ class Board:
             return other.board==self._board
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
-    def __sub__(self, other) -> dict[str: list[tuple[int]]]:
+    def __sub__(self, other) -> 'dict[str: list[tuple[int]]]':
         """finds the difference between two boards, and returns the difference. to use, do old_board - new_board.  It will return a dict of things to set to make changes.
 
         Args:
@@ -290,7 +296,7 @@ class Board:
         return False
     
     @property
-    def score(self) -> tuple[int]:
+    def score(self) -> 'tuple[int]':
         """the current score
 
         Returns:
@@ -303,7 +309,7 @@ class Board:
             sum(list(map(lambda x: sum(list(map(lambda y: int(y==1), x))), self._board))), #find whites
         )
         return self._score
-
+#%%
 def main():
     b=Board()
     while b.checkGameOver()==True:
@@ -324,7 +330,13 @@ def main():
 
 
 if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\nExiting.")
+    b=Board()
+    from timeit import timeit as t
+    from time import sleep
+    sleep(2)
+    print(t('b._calculatePossibleMoves()', number = 10000, globals = globals()))
+    # try:
+    #     main()
+    # except KeyboardInterrupt:
+    #     print("\nExiting.")
+# %%
