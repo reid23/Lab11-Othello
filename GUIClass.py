@@ -3,7 +3,7 @@
 
 
 #questions:
-#   update score brackets
+
 #   illuminating tiles- rectangles are getting made but not filled and
 #   PLAYER CHOOSES IF THEY ARE WHITE OR BLACK- get to work in board
 #   Your game should always be “Human vs. Computer” but you need to allow the Human
@@ -22,6 +22,7 @@
 #   No valid moves (player loses their turn). In this case, you should instruct the
 #user to click anywhere inorder to continue just so there is a forced pause for the
 #user’s sake.
+#   update score brackets
 
 from graphics import *
 from ButtonClass import Button
@@ -114,7 +115,7 @@ squres.")
     def updateScore(self, board):
         score = board.score
         print("raw score: ", board.score)
-        newScore = "Black: ", str(score[0]), "White: ", str(score[1])
+        newScore = "Black: " + str(score[0]) + " White: " + str(score[1])
         self.scoreText.setText(newScore)
 
     def invalidMove(self):
