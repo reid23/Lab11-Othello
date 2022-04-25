@@ -343,7 +343,6 @@ def init():
     print("initializing game...")
     for _ in range(50):
         b=Board()
-        # hash(b)
         str(b)
         repr(b)
         b.player
