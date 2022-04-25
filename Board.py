@@ -4,7 +4,10 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-#%%
+from timeit import timeit as t
+from time import sleep
+from functools import lru_cache
+
 class Board:
     MOVES = [
                 (-1, -1),
@@ -17,11 +20,12 @@ class Board:
                 ( 1,  1),
             ]
 
-    def __init__(self, board: 'list[list[int]]' = None):
+    def __init__(self, board: 'list[list[int]]' = None, curPlayer = None):
         """constructor for board.  Initializes the board in starting position if `board` isn't passed.
 
         Args:
             board (list, optional): the board condition.  Do not pass, only used by the copy method. Defaults to None.
+            curplayer (int, optional): the current player.  Do not pass, only used by the copy method.  Defaults to None
         """
         self._score = False
         #here's how the turn switchy thing works:
@@ -36,6 +40,8 @@ class Board:
         if board != None:
             self._board = board
             self.oldBoard = None
+            self._this = curPlayer
+            self._other = int(not curPlayer)
         else:
             self._board = [[self._empty for _ in range(8)] for _ in range(8)]
             self.oldBoard = Board(self._board) #init to all empty
@@ -46,8 +52,24 @@ class Board:
 
         self._possibleMoves = {}
         self._calculatePossibleMoves()
-        self._findEmptySquares = lambda x: self._empty in x
-    
+
+    def _findEmptySquares(self, x: 'list[int]') -> bool:
+        """utility function to check if there are empty squares in a row.
+
+        Args:
+            x (list[int]): the row of the board
+
+        Returns:
+            bool: whether or not there are empty squares
+        """
+        return self._empty in x
+
+    # def __hash__(self):
+    #     out = []
+    #     for row in self._board:
+    #         out+=row
+        
+    #     return hash(tuple(out+[self._this]))
     def __str__(self) -> str:
         """human-readable string representation of this board. used by str(board), print(), etc.
 
@@ -90,15 +112,13 @@ class Board:
             str: the player, either 'black' or 'white'
         """
         return ['black', 'white'][self._this]
-
     def copy(self):
         """copies this board object.
 
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(list(map(list.copy, self._board))) #deep copy, slower but neccessary
-
+        return Board(board = list(map(list.copy, self._board)), curPlayer = self._this) #deep copy, slower but neccessary
     def put(self, pos: 'tuple[int]') -> None:
         """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
 
@@ -108,12 +128,11 @@ class Board:
         if pos == () == tuple(self.pMoves): #if nothing is passed, and there are no legal moves (ie player is allowed to not make a move), just switch the turn.
             self._switchTurn()
             return
-        assert pos in self.pMoves, "Not a legal move.  Expected move in {self.pMoves} but received {pos}."
+        assert pos in self.pMoves, f"Not a legal move.  Expected move in {self.pMoves} but received {pos}."
         self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
         self._switchTurn()
-        
     def putCopy(self, pos: 'tuple[int]'):
         """the same as Board.put, except it creates a copy and puts a piece in the copy.
 
@@ -126,7 +145,6 @@ class Board:
         cp = self.copy()
         cp.put(pos)
         return cp
-
     def _flip(self, squares: 'tuple[tuple[int]]', curpos: 'tuple[int]' = (0, 0)) -> None:
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
 
@@ -156,7 +174,6 @@ class Board:
             dict: locations to move and tiles that flip, in the form {(mov_row, mov_col): [(flip_row, flip_col), (flip_row, flip_col)], etc.}
         """
         return self._possibleMoves
-
     @property
     def pMoves(self) -> 'list[tuple[int]]':
         """returns a list of tuples, representing the list of possible squares that the current player could choose.
@@ -165,7 +182,6 @@ class Board:
             list: the possible locations to move, in the format [(r_1, c_1), (r_2, c_2), ... , (r_n, c_n)]
         """
         return list(self._possibleMoves.keys())
-    
     def _get(self, pos: 'tuple[int]') -> int:
         """gets the raw number at a position
 
@@ -185,9 +201,6 @@ class Board:
             pos (tuple): the position (c, r) to enter `val` at
         """
         self._board[pos[0]][pos[1]] = val
-    
-    # @jit
-    # @profile
     def _findFlipsInDir(self, mov: 'tuple[int]', dir: 'tuple[int]') -> 'list[tuple[int]]':
         """checks whether pieces can be captured in a `dir`ection for `mov`
 
@@ -211,8 +224,7 @@ class Board:
                 return toFlip
             if piece == self._other:
                 toFlip.append(mov)
-    # @jit
-    # @profile
+    # @lru_cache(maxsize = None)
     def _isLegal(self, mov: 'tuple[int]', curpos: 'tuple[int]' = (0,0)) -> 'list[tuple[int]]':
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
@@ -245,7 +257,6 @@ class Board:
             dict: the info about what should be drawn, in the format {'black': [(r, c), (r, c)...], 'white': [(r, c), (r, c)...], 'empty': [(r, c), (r, c), ...]}
         """
         return self.oldBoard - self #uses __sub__
-
     def __eq__(self, other) -> bool:
         """checks if other is the same board as self.
 
@@ -256,7 +267,7 @@ class Board:
             bool: whether or not other is a board that is identical to this one.
         """
         try:
-            return other.board==self._board
+            return other._board == self._board and other._this == self._this #shhhh encapsulation doesn't exist
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
     def __sub__(self, other) -> 'dict[str: list[tuple[int]]]':
@@ -280,6 +291,7 @@ class Board:
                     continue
                 out[NAMES[oth]].append((i, j))
         return out
+    # @lru_cache(maxsize = None)
     def checkGameOver(self) -> bool:
         """checks whether the game is over.
 
@@ -294,7 +306,6 @@ class Board:
             if cp.pMoves == (): #and next player's possible moves are empty
                 return True  #then the game is over
         return False
-    
     @property
     def score(self) -> 'tuple[int]':
         """the current score
@@ -309,7 +320,7 @@ class Board:
             sum(list(map(lambda x: sum(list(map(lambda y: int(y==1), x))), self._board))), #find whites
         )
         return self._score
-#%%
+
 def main():
     b=Board()
     while b.checkGameOver()==True:
@@ -328,15 +339,40 @@ def main():
     print("Game over!", outcome)
     print(f"Final Score: {score}")
 
+def init():
+    print("initializing game...")
+    for _ in range(50):
+        b=Board()
+        # hash(b)
+        str(b)
+        repr(b)
+        b.player
+        b.put(b.pMoves[0])
+        b.putCopy(b.pMoves[1])
+        b.pMovesVerbose
+        b.getToDraw()
+        b==b.copy()
+        b.checkGameOver()
+        b.score
+    print("optimzing...")
+
+    sleep(30) #wait for jit to finish compiling
+
+    print("done")
+
+
+def timingBenchmark():
+    b=Board()
+    return t('b._calculatePossibleMoves()', number = 10000, globals = locals())
+
 
 if __name__ == '__main__':
-    b=Board()
-    from timeit import timeit as t
-    from time import sleep
-    sleep(2)
-    print(t('b._calculatePossibleMoves()', number = 10000, globals = globals()))
-    # try:
-    #     main()
-    # except KeyboardInterrupt:
-    #     print("\nExiting.")
-# %%
+    print(timingBenchmark())
+    init()
+    print(timingBenchmark())
+
+
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nExiting.")
