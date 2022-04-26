@@ -3,26 +3,13 @@
 
 
 #questions:
-
 #   illuminating tiles- rectangles are getting made but not filled and
+# don't overwrite squares
 #   PLAYER CHOOSES IF THEY ARE WHITE OR BLACK- get to work in board
-#   Your game should always be “Human vs. Computer” but you need to allow the Human
-#to first choose between playing as White or Black (the only significant
-#difference being that Black always goes first
 #   You should have some means of pointing out to the user what square the computer
 #chose on its turn. Once either player has moved, your program should flip the
 #appropriate discs to the correct color.
 
-
-# tentatively done:
-#   #   Warning when an invalid square is chosen. The player should be allowed to try
-#again if this happens.
-#   Please include the rank and file as you did for the chessboard (a-g across the
-#columns and 1-8 from bottom to top).
-#   No valid moves (player loses their turn). In this case, you should instruct the
-#user to click anywhere inorder to continue just so there is a forced pause for the
-#user’s sake.
-#   update score brackets
 
 from graphics import *
 from ButtonClass import Button
