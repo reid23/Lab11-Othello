@@ -295,9 +295,9 @@ class Board:
         """checks whether the game is over.
 
         Returns:
-            bool: whether all squares are full
+            bool: whether the game is over
         """
-        if True in map(self._findEmptySquares, self._board): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
+        if not (True in map(self._findEmptySquares, self._board)): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
             return True 
         if self.pMoves == (): #if current player's possible moves are empty
             cp = self.copy()
