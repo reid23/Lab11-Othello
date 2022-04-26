@@ -1,32 +1,16 @@
 # Hope Trygstad
 # class for  Othello Game
 
-
 #questions:
-
-#   illuminating tiles- rectangles are getting made but not filled and
 #   PLAYER CHOOSES IF THEY ARE WHITE OR BLACK- get to work in board
-#   Your game should always be “Human vs. Computer” but you need to allow the Human
-#to first choose between playing as White or Black (the only significant
-#difference being that Black always goes first
 #   You should have some means of pointing out to the user what square the computer
 #chose on its turn. Once either player has moved, your program should flip the
 #appropriate discs to the correct color.
 
 
-# tentatively done:
-#   #   Warning when an invalid square is chosen. The player should be allowed to try
-#again if this happens.
-#   Please include the rank and file as you did for the chessboard (a-g across the
-#columns and 1-8 from bottom to top).
-#   No valid moves (player loses their turn). In this case, you should instruct the
-#user to click anywhere inorder to continue just so there is a forced pause for the
-#user’s sake.
-#   update score brackets
-
 from graphics import *
 from ButtonClass import Button
-from GraphicsObject import Piece
+from Piece import Piece
 from Board import Board
 import math
 
@@ -83,8 +67,6 @@ class GUI:
         self.miniwin.close()
         return team
         
-        
-
     def createPieces(self):
         "Sets up the initial pieces on the board"
         piecesList = []
@@ -96,8 +78,11 @@ class GUI:
             i.draw(self.win)
         return piecesList
 
-    def getMouse(self):
-        self.win.getMouse()
+    def getWin(self):
+        return self.win
+
+##    def getMouse(self):
+##        self.win.getMouse()
 
     def changeMessage(self, text):
         self.message.undraw()
@@ -128,14 +113,12 @@ squres.")
         "Draws an object onto the board, with the thing and its coordinates \
         as parameters"
         piece.draw(self.win)
-        pass
 
     def checkIfQuit(self):
         p = self.win.getMouse()
         if self.quitButton.clicked(p):
             return True
         else: return False
-
 
     def mouseClick(self):
         "Shows the user all legal squares, lets them choose their move, \
@@ -144,23 +127,18 @@ squres.")
         p = self.win.getMouse()
         return p
 
-    def guiFlip(self, piece):
-        piece.flipPiece()
-        piece.draw(self.win)
-
     def __animate_AI(self):
         "shows the user what move the AI did"
         pass
 
-    def showAllowedMove(self, y, x):
-        self.miniRect = Rectangle(Point(x-0.5, y-0.5),\
-                             Point(x+0.5, y-0.5))
-        self.miniRect.setFill("white")
-        #self.miniRect.setFill(color_rgb(198, 245, 232))
-        self.miniRect.draw(self.win)
-
-    def unLight(self, x, y):
-        self.miniRect.setFill("green")
+    def showAllowedMoves(self, on, turn, moves, win):
+        if on == True:
+            circles = []
+            for i in moves:
+                circles.append(Piece(turn, i[0], i[1]))
+            for circle in circles:
+                circle.fake(self.win)
+        return circles
 
     def gameOver(self, b):
         score = b.score
@@ -186,15 +164,14 @@ def main():
     else:
         turn = False
     moves = b.pMoves
-    while b.checkGameOver()==True:
+    while not b.checkGameOver():
         if turn == True:
             gui.blackTurn()
         else:
             gui.whiteTurn()
         
         print("possible moves: ", moves)
-        for i in moves:
-            gui.showAllowedMove(i[0], i[1])
+        fakeCircles = gui.showAllowedMoves(True, turn, moves, gui.getWin())
 
         if len(moves) == 0:
             gui.noMoves()
@@ -224,18 +201,16 @@ def main():
         a = b.getToDraw()
         print("get to draw is ", a)
         x = a.get('black')
-        print("draw black pieces here: ", x)
         for i in x:
             newPiece = Piece(True, i[0], i[1])
             gui.drawPiece(newPiece, i[0], i[1])
         y = a.get('white')
-        print("draw white pieces here: ", y)
         for i in y:
             newPiece = Piece(False, i[0], i[1])
             gui.drawPiece(newPiece, i[0], i[1])
 
-        for i in moves:
-            gui.unLight(i[0], i[1])
+        for i in fakeCircles:
+            i.disappear()
         if turn == True:
             turn = False
         else:
@@ -244,11 +219,6 @@ def main():
         moves = b.pMoves
 
     gui.gameOver(b)
-    
-    
-    
-    
-    
 
 main()
     

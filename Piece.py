@@ -15,28 +15,18 @@ class Piece:
         if self.color == False:
             self.circle.setFill("white")
 
+    def fake(self, win):
+        self.circle.setFill(color_rgb(198, 245, 232))
+        self.draw(win)
+
+    def disappear(self):
+        self.circle.undraw()
 
     def getX(self):
         return(self.x)
 
     def getY(self):
         return(self.y)
-
-    def color(self):
-        "draws the piece into the GUI, showing a color change if their \
-        was one"
-        if self.color == True:
-            self.circle.setFill("black")
-        if self.color == False:
-            self.circle.setFill("white")
-
-    def flipPiece(self):
-        "Changes the color of the piece. No parameters since it can only change\
-        one way"
-        if self.color == True:
-            self.color = False
-        else:
-            self.color = True
 
     def draw(self, win):
         self.circle.draw(win)
