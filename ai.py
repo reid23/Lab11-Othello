@@ -15,8 +15,14 @@ mat = []
 for row in weightMatrix:
     mat += row
 
+def mult(l):
+    prod = 1
+    for i in l:
+        prod *= i
+    return prod
+
 def weights(board):
-    return sum(map(sum, zip(mat, board.toVec())))
+    return sum(map(mult, zip(mat, board.toVec())))
 
 
 def analyze(board):
@@ -45,14 +51,11 @@ def calc(b, curDepth, maxDepth, player):
     if curDepth == maxDepth:
         return weights(b) + (b.score[player] - b.score[int(not player)])/2
 
-    print(b)
-    print(b.pMoves)
-    print()
-
     values = []
     for move in b.pMoves:
         values.append(calc(b.putCopy(move), curDepth+1, maxDepth, player))
-    
+    if len(values)==0:
+        return 0
 
     if {'white': 1, 'black': 0}[b.player] == player:
         return max(values)
@@ -65,15 +68,17 @@ b=Board()
 ply = 2
 
 # try:
-while True:
+while b.checkGameOver():
     moves = {}
     
     for move in b.pMoves:
         moves[move] = calc(b.putCopy(move), 0, ply, {'white': 1, 'black': 0}[b.player])
     
-    b.put(max(moves, key = moves.get))
+    try:
+        b.put(max(moves, key = moves.get))
+    except ValueError:
+        print(f'no moves for {b.player}')
     print('moved')
-# except:
-#     print(b)
-#     print(b.score)
+print(b)
+print(b.score)
 # %%
