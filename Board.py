@@ -17,11 +17,12 @@ class Board:
                 ( 1,  1),
             ]
 
-    def __init__(self, board: 'list[list[int]]' = None):
-        """constructor for board.  Initializes the board in starting position if `board` isn't passed.
+    def __init__(self, board: 'list[list[int]]' = None, curplayer = None):
+        """constructor for board. Initializes the board in starting position if `board` isn't passed.
 
         Args:
-            board (list, optional): the board condition.  Do not pass, only used by the copy method. Defaults to None.
+            board (list, optional): the board condition. Do not pass, only used by the copy method. Defaults to None.
+            curplayer (int, optional): the current player. Do not pass, only used by the copy method. Defaults to None.
         """
         self._score = False
         #here's how the turn switchy thing works:
@@ -36,6 +37,8 @@ class Board:
         if board != None:
             self._board = board
             self.oldBoard = None
+            self._this = curplayer
+            self._other = int(not curplayer)
         else:
             self._board = [[self._empty for _ in range(8)] for _ in range(8)]
             self.oldBoard = Board(self._board) #init to all empty
@@ -47,6 +50,9 @@ class Board:
         self._possibleMoves = {}
         self._calculatePossibleMoves()
         self._findEmptySquares = lambda x: self._empty in x
+    
+    def toVec(self): #makes 2d list into 1d
+        return [[0, -1, 1][(int(self._board[i][j]==self._this)+1)*int(not self._board[i][j]==self._empty)] for i in range(8) for j in range(8)]
     
     def __str__(self) -> str:
         """human-readable string representation of this board. used by str(board), print(), etc.
@@ -70,7 +76,7 @@ class Board:
         out += f"Board(board = [{self._board[0]}"
         for row in self._board[1:]:
             out += f"\n                {row}"
-        out += f"], curColor = {self._colors})"
+        out += f"], curplayer = {self._this})\n"
         return out
     def printWithMoves(self) -> None:
         """prints out the current game, with unique numers in each of the possible moves, so the user can see where they want to move.
@@ -97,7 +103,7 @@ class Board:
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(list(map(list.copy, self._board))) #deep copy, slower but neccessary
+        return Board(list(map(list.copy, self._board)), self._this) #deep copy, slower but neccessary
 
     def put(self, pos: 'tuple[int]') -> None:
         """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
@@ -108,7 +114,7 @@ class Board:
         if pos == () == tuple(self.pMoves): #if nothing is passed, and there are no legal moves (ie player is allowed to not make a move), just switch the turn.
             self._switchTurn()
             return
-        assert pos in self.pMoves, "Not a legal move.  Expected move in {self.pMoves} but received {pos}."
+        assert pos in self.pMoves, f"Not a legal move.  Expected move in {self.pMoves} but received {pos}."
         self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
