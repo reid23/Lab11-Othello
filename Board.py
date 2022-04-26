@@ -115,6 +115,7 @@ class Board:
             self._switchTurn()
             return
         assert pos in self.pMoves, f"Not a legal move.  Expected move in {self.pMoves} but received {pos}."
+        
         self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
@@ -129,9 +130,15 @@ class Board:
         Returns:
             Board: the copied board with the new piece
         """
-        cp = self.copy()
-        cp.put(pos)
-        return cp
+        cpl = list(map(list.copy, self._board)) #from self.copy()
+        for i in self._possibleMoves[pos]: #we already calculated the flips so no need to recalculate
+            cpl[i[0]][i[1]]==self._this
+        
+        return Board(cpl, self._other) #just create board with things already flipped
+
+        # cp = self.copy()
+        # cp.put(pos)
+        # return cp
 
     def _flip(self, squares: 'tuple[tuple[int]]', curpos: 'tuple[int]' = (0, 0)) -> None:
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
@@ -293,11 +300,11 @@ class Board:
             bool: whether the game is over
         """
         if not (True in map(self._findEmptySquares, self._board)): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
-            return True 
-        if self.pMoves == (): #if current player's possible moves are empty
+            return True
+        if len(self.pMoves) == 0: #if current player's possible moves are empty
             cp = self.copy()
             cp._switchTurn()
-            if cp.pMoves == (): #and next player's possible moves are empty
+            if len(cp.pMoves)==0: #and next player's possible moves are empty
                 return True  #then the game is over
         return False
     
