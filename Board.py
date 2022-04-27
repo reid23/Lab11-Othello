@@ -4,7 +4,12 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
+<<<<<<< HEAD
 
+=======
+from functools import lru_cache
+#%%
+>>>>>>> ai works somewhat
 class Board:
     MOVES = [
                 (-1, -1),
@@ -46,14 +51,21 @@ class Board:
             self._set(self._other, (3, 4))
             self._set(self._other, (4, 3))
             self._set(self._this,  (4, 4))
-
+        
+        self._vec = False
         self._possibleMoves = {}
         self._calculatePossibleMoves()
         self._findEmptySquares = lambda x: self._empty in x
     
+    def __hash__(self):
+        return hash(tuple(self.toVec()))
+
+    # @lru_cache(100)
     def toVec(self): #makes 2d list into 1d
-        return [[0, -1, 1][(int(self._board[i][j]==self._this)+1)*int(not self._board[i][j]==self._empty)] for i in range(8) for j in range(8)]
-    
+        if not self._vec:
+            self._vec = [[0, -1, 1][(int(self._board[i][j]==0)+1)*int(not self._board[i][j]==self._empty)] for i in range(8) for j in range(8)]
+        return self._vec
+
     def __str__(self) -> str:
         """human-readable string representation of this board. used by str(board), print(), etc.
 
@@ -134,8 +146,9 @@ class Board:
         """
         cpl = list(map(list.copy, self._board)) #from self.copy()
         for i in self._possibleMoves[pos]: #we already calculated the flips so no need to recalculate
-            cpl[i[0]][i[1]]==self._this
-        
+            cpl[i[0]][i[1]]=self._this
+
+        cpl[pos[0]][pos[1]]=self._this
         return Board(cpl, self._other) #just create board with things already flipped
 
         # cp = self.copy()
@@ -203,7 +216,6 @@ class Board:
         self._board[pos[0]][pos[1]] = val
 
     # @jit
-    # @profile
     def _findFlipsInDir(self, mov: 'tuple[int]', dir: 'tuple[int]') -> 'list[tuple[int]]':
         """checks whether pieces can be captured in a `dir`ection for `mov`
 
@@ -217,9 +229,10 @@ class Board:
         toFlip = []
         
         while True:
-            mov = [mov[0]+dir[0], mov[1]+dir[1]] #move the focused square one step in `dir`
+            mov = [mov[0]+dir[0], mov[1]+dir[1]]
+
+            piece = self._board[mov[0]][mov[1]] if max(mov)<=7 and min(mov)>=0 else -1 #get the piece
             
-            piece = self._get(mov) #get the piece
             if piece == self._empty or piece == -1: #when mov is out of bounds or there's no piece at this square
                 return []
             if piece == self._this: #if it's the same color, there's a bracket!  if there's no space between the two sides, though, it'll still just return an empty list.
@@ -228,7 +241,6 @@ class Board:
                 toFlip.append(mov)
 
     # @jit
-    # @profile
     def _isLegal(self, mov: 'tuple[int]', curpos: 'tuple[int]' = (0,0)) -> 'list[tuple[int]]':
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
@@ -254,7 +266,7 @@ class Board:
         self._this, self._other = self._other, self._this
         self._calculatePossibleMoves()
         self._score = False
-
+        self._vec = False
     def getToDraw(self) -> 'dict[str: list[tuple[int]]]':
         """returns which pieces should be drawn, and their locations.
 
@@ -273,7 +285,7 @@ class Board:
             bool: whether or not other is a board that is identical to this one.
         """
         try:
-            return other.board==self._board
+            return other._board==self._board
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
 
@@ -329,13 +341,23 @@ class Board:
         return self._score
 
 def main():
+    a=ai()
     b=Board()
-    while b.checkGameOver()==True:
+    while not b.checkGameOver():
         print("board:")
         b.printWithMoves()
         b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
-        print(b.getToDraw())
+
         print("\n\nnext turn!")
+
+        move = a(b, 1)
+        print("board:")
+        b.printWithMoves()
+        print(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: {b.pMoves.index(move)}: {move}")
+        b.put(move)
+
+        print("\n\nnext turn!")
+
     score = b.score()
     if score[0]>score[1]:
         outcome = 'Black won.'
@@ -348,8 +370,14 @@ def main():
 
 
 if __name__ == '__main__':
+    from ai import ai
+    # b=Board()
+    # from timeit import timeit as t
+    # from time import sleep
+    # sleep(2)
+    # print(t('b._calculatePossibleMoves()', number = 10000, globals = globals()))
     try:
         main()
     except KeyboardInterrupt:
         print("\nExiting.")
-
+# %%
