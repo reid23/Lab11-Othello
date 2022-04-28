@@ -339,17 +339,31 @@ def main():
     # it's own way.
     while not b.checkGameOver():
         if turn == True and blackTeam == "AI":
-            gui.changeMessage("Please wait, I am choosing a move.")
-            gui.blackAITurn(b, a)
+            # doing a try except for all four to get rid of the error if they
+            # quit
+            try:
+                gui.changeMessage("Please wait, I am choosing a move.")
+                gui.blackAITurn(b, a)
+            except:
+                pass
         elif turn == True and blackTeam == "player":
-            gui.blackTurn()
-            gui.humanBlackTurn(b)
+            try:
+                gui.blackTurn()
+                gui.humanBlackTurn(b)
+            except:
+                pass
         elif turn == False and blackTeam == "AI":
-            gui.whiteTurn()
-            gui.humanWhiteTurn(b)
+            try:
+                gui.whiteTurn()
+                gui.humanWhiteTurn(b)
+            except:
+                pass
         elif turn == False and blackTeam == "player":
-            gui.changeMessage("Please wait, I am choosing a move.")
-            gui.whiteAITurn(b, a)
+            try:
+                gui.changeMessage("Please wait, I am choosing a move.")
+                gui.whiteAITurn(b, a)
+            except:
+                pass
         # after performing the turn, SWITCH it to the other person's turn
         if turn == True:
             turn = False
