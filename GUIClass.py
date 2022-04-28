@@ -54,6 +54,9 @@ class GUI:
             let.setFill("white")
             let.draw(self.win)
 
+        self.lastMoveMarker = Circle(Point(0,0), 0.1)
+        self.lastMoveMarker.setFill("grey")
+
 
 
     def getTeam(self):
@@ -96,7 +99,11 @@ class GUI:
         # undraws, setText, redraw
         self.message.undraw()
         self.message.setText(text)
-        self.message.draw(self.win)
+        # in case the window is closed
+        try:
+            self.message.draw(self.win)
+        except:
+            pass
 
     def blackTurn(self):
         "Changes message box to black turn"
@@ -170,7 +177,7 @@ squres.")
             outcome = 'White won.'
         else:
             outcome = 'Black and White tied.'
-        outOutcome = "Game over!", outcome
+        outOutcome = "Game over! " + outcome
         self.changeMessage(outOutcome)
 
     def humanBlackTurn(self, board):
@@ -278,10 +285,11 @@ squres.")
         # show what the ai COULD do
         fakeCircles = self.showAllowedMoves(True, True, moves, self.getWin())
         # AI MAKES A TURN!!!
-        board.put(a(board))
+        aiMove = a(board, 2)
+        board.put(aiMove)
         # Go through what the board says to draw and draw it
         a = board.getToDraw()
-        lastMoveMarker.undraw()
+        self.lastMoveMarker.undraw()
         print("get to draw is ", a)
         x = a.get('black')
         for i in x:
@@ -294,6 +302,9 @@ squres.")
         # undraw all of the fake circles from earlier
         for i in fakeCircles:
             i.disappear()
+        curPos = (self.lastMoveMarker.getCenter().getY(), self.lastMoveMarker.getCenter().getX())
+        self.lastMoveMarker.move(aiMove[1]-curPos[1], aiMove[0]-curPos[0])
+        self.lastMoveMarker.draw(self.win)
         self.updateScore(board)
         
     def whiteAITurn(self, board, ai):
@@ -301,9 +312,10 @@ squres.")
         moves = board.pMoves
         a = ai
         fakeCircles = self.showAllowedMoves(True, False, moves, self.getWin())
-        board.put(a(board))
+        aiMove = a(board, 2)
+        board.put(aiMove)
         a = board.getToDraw()
-        lastMoveMarker.undraw()
+        self.lastMoveMarker.undraw()
         print("get to draw is ", a)
         x = a.get('black')
         for i in x:
@@ -316,6 +328,9 @@ squres.")
         # undraw all of the fake circles from earlier
         for i in fakeCircles:
             i.disappear()
+        curPos = (self.lastMoveMarker.getCenter().getY(), self.lastMoveMarker.getCenter().getX())
+        self.lastMoveMarker.move(aiMove[1]-curPos[1], aiMove[0]-curPos[0])
+        self.lastMoveMarker.draw(self.win)
         self.updateScore(board)
             
 
