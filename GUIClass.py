@@ -69,11 +69,12 @@ class GUI:
         
     def createPieces(self):
         "Sets up the initial pieces on the board"
-        piecesList = []
-        piecesList.append(Piece(True, 3, 3))
-        piecesList.append(Piece(True, 4,4))
-        piecesList.append(Piece(False, 3, 4))
-        piecesList.append(Piece(False, 4, 3))
+        piecesList = [
+            Piece(True, 3, 3),
+            Piece(True, 4,4),
+            Piece(False, 3, 4),
+            Piece(False, 4, 3),
+        ]
         for i in piecesList:
             i.draw(self.win)
         return piecesList
@@ -159,11 +160,14 @@ def main():
     b = Board()
     pieces = gui.createPieces()
     print("current pieces: ", pieces)
+
     if team == "b":
         turn = True
     else:
         turn = False
     moves = b.pMoves
+
+
     while not b.checkGameOver():
         if turn == True:
             gui.blackTurn()
@@ -220,5 +224,6 @@ def main():
 
     gui.gameOver(b)
 
-main()
+if __name__ == '__main__': main()
     
+

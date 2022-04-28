@@ -2,7 +2,7 @@
 
 from Board import Board
 from GUIClass import GUI
-from GraphicsObject import Piece
+from Piece import Piece
     
 
 def main():
