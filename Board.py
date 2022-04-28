@@ -5,6 +5,7 @@ This file is a board class.  To get what you need to draw, do Board.getToDraw().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
 from functools import lru_cache
+# from ai import ai
 #%%
 class Board:
     MOVES = [
@@ -59,7 +60,7 @@ class Board:
     # @lru_cache(100)
     def toVec(self): #makes 2d list into 1d
         if not self._vec:
-            self._vec = [[0, -1, 1][(int(self._board[i][j]==0)+1)*int(not self._board[i][j]==self._empty)] for i in range(8) for j in range(8)]
+            self._vec = [[-1, 1, 0][self._board[i][j]] for i in range(8) for j in range(8)]
         return self._vec
 
     def __str__(self) -> str:
@@ -104,6 +105,15 @@ class Board:
             str: the player, either 'black' or 'white'
         """
         return ['black', 'white'][self._this]
+
+    @property
+    def playerNum(self) -> int:
+        """returns -1 (black) or 1 (white)
+
+        Returns:
+            int: the current player
+        """
+        return (self._this*2)-1
 
     def copy(self):
         """copies this board object.
@@ -334,22 +344,38 @@ class Board:
 def main():
     a=ai()
     b=Board()
-    while not b.checkGameOver():
+    aiPlayer='black'
+
+    #if ai is white, run initial move
+    if aiPlayer=='white':
+        move = a(b)
         print("board:")
         b.printWithMoves()
-        b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
 
-        print("\n\nnext turn!")
-
-        move = a(b, 1)
-        print("board:")
-        b.printWithMoves()
         print(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: {b.pMoves.index(move)}: {move}")
         b.put(move)
 
         print("\n\nnext turn!")
 
-    score = b.score()
+
+    while not b.checkGameOver():
+        print("board:")
+        b.printWithMoves()
+        if len(b.pMoves) == 0: continue
+        b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
+
+        print("\n\nnext turn!")
+
+        move = a(b)
+        print("board:")
+        b.printWithMoves()
+        if len(move) == 0: continue
+        print(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: {b.pMoves.index(move)}: {move}")
+        b.put(move)
+
+        print("\n\nnext turn!")
+
+    score = b.score
     if score[0]>score[1]:
         outcome = 'Black won.'
     elif score[0]<score[1]:
