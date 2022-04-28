@@ -29,7 +29,7 @@ class ai:
 
     def heuristic(self, board):
             weights = self.weights(board)*board.playerNum #how good it is for white
-            out = weights*1.7 \
+            out = weights*1.8 \
                 + (board.score[1] - board.score[0]) \
                 + board.playerNum*(len(board.pMovesVerbose)) #pMovesVerbose is faster
             return out
