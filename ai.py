@@ -29,9 +29,9 @@ class ai:
 
     def heuristic(self, board):
             weights = self.weights(board)*board.playerNum #how good it is for white
-            out = weights \
+            out = weights*1.7 \
                 + (board.score[1] - board.score[0]) \
-                + board.playerNum*(len(board.pMovesVerbose))*2 #pMovesVerbose is faster
+                + board.playerNum*(len(board.pMovesVerbose)) #pMovesVerbose is faster
             return out
     # @lru_cache(None)
     def calc(self, b, curDepth, maxDepth, player):
