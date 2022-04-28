@@ -33,15 +33,9 @@ class ai:
     def _weights(self, board): #returns how good it is for white
         return sum(map(math.prod, zip(self.mat, board.toVec()))) #dot product of the weights and the board
 
-<<<<<<< HEAD
     def _heuristic(self, board): #evaluates the favorability of a board, FOR WHITE
             weights = self._weights(board)*board.playerNum #how good it is for white
             out = weights*1.8 \
-=======
-    def heuristic(self, board):
-            weights = self.weights(board)*board.playerNum #how good it is for white
-            out = weights*1.7 \
->>>>>>> fixed thing
                 + (board.score[1] - board.score[0]) \
                 + board.playerNum*(len(board.pMovesVerbose)) #pMovesVerbose is faster
             return out
