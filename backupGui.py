@@ -172,150 +172,7 @@ squres.")
         self.changeMessage(outOutcome)
 
     def humanBlackTurn(self, board):
-        # get the moves
-        b = board
-        moves = b.pMoves
-        print("possible moves: ", moves)
-        # draw the options
-        fakeCircles = self.showAllowedMoves(True, True, moves, self.getWin())
-        # what happens if there are no moves
-        if len(moves) == 0:
-            self.noMoves()
-            self.mouseClick()
-            return
-        # get mouseclick
-        p = self.mouseClick()
-        if self.quitButton.clicked(p):
-            self.win.close()
-            return
-        # process into a move
-        xmove = round(p.getX())
-        ymove = round(p.getY())
-        theMove = (ymove, xmove)
-        print("the move is ", theMove)
-        # keep trying until they select a valid one
-        while theMove not in moves:
-            self.invalidMove()
-            p = self.mouseClick()
-            if self.quitButton.clicked(p):
-                self.win.close()
-                return
-                break
-            xmove = round(p.getX())
-            ymove = round(p.getY())
-            theMove = (ymove, xmove)
-        # have the board object process the move
-        b.put(theMove)
-        # board tells where to draw new pieces, get the dictionary and draw them
-        a = b.getToDraw()
-        print("get to draw is ", a)
-        x = a.get('black')
-        for i in x:
-            newPiece = Piece(True, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        y = a.get('white')
-        for i in y:
-            newPiece = Piece(False, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        # undraw all of the fake circles from earlier
-        for i in fakeCircles:
-            i.disappear()
-        self.updateScore(b)
-        # return the new list
-        #return b
-
-    def humanWhiteTurn(self, board):
-        "same exact thing as human black turn, just different color!"
-        b = board
-        moves = b.pMoves
-        print("possible moves: ", moves)
-        fakeCircles = self.showAllowedMoves(True, False, moves, self.getWin())
-        if len(moves) == 0:
-            self.noMoves()
-            self.mouseClick()
-            return
-        p = self.mouseClick()
-        if self.quitButton.clicked(p):
-            self.win.close()
-            return
-        xmove = round(p.getX())
-        ymove = round(p.getY())
-        theMove = (ymove, xmove)
-        print("the move is ", theMove)
         
-        while theMove not in moves:
-            self.invalidMove()
-            p = self.mouseClick()
-            if self.quitButton.clicked(p):
-                self.win.close()
-                return
-                break
-            xmove = round(p.getX())
-            ymove = round(p.getY())
-            theMove = (ymove, xmove)
-        b.put(theMove)
-        a = b.getToDraw()
-        print("get to draw is ", a)
-        x = a.get('black')
-        for i in x:
-            newPiece = Piece(True, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        y = a.get('white')
-        for i in y:
-            newPiece = Piece(False, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-
-        for i in fakeCircles:
-            i.disappear()
-        self.updateScore(b)
-        #return b
-
-    def blackAITurn(self, board, ai):
-        "Performs a move for the ai, if it is black, both in the GUI and board"
-        # set up the ai and get possible moves
-        a = ai
-        moves = board.pMoves
-        # show what the ai COULD do
-        fakeCircles = self.showAllowedMoves(True, True, moves, self.getWin())
-        # AI MAKES A TURN!!!
-        board.put(a(board))
-        # Go through what the board says to draw and draw it
-        a = board.getToDraw()
-        print("get to draw is ", a)
-        x = a.get('black')
-        for i in x:
-            newPiece = Piece(True, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        y = a.get('white')
-        for i in y:
-            newPiece = Piece(False, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        # undraw all of the fake circles from earlier
-        for i in fakeCircles:
-            i.disappear()
-        self.updateScore(board)
-        
-    def whiteAITurn(self, board, ai):
-        "Same exact function as one before, but for white!"
-        moves = board.pMoves
-        a = ai
-        fakeCircles = self.showAllowedMoves(True, False, moves, self.getWin())
-        board.put(a(board))
-        a = board.getToDraw()
-        print("get to draw is ", a)
-        x = a.get('black')
-        for i in x:
-            newPiece = Piece(True, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        y = a.get('white')
-        for i in y:
-            newPiece = Piece(False, i[0], i[1])
-            self.drawPiece(newPiece, i[0], i[1])
-        # undraw all of the fake circles from earlier
-        for i in fakeCircles:
-            i.disappear()
-        self.updateScore(board)
-            
 
 
 def main():
@@ -323,7 +180,7 @@ def main():
     gui = GUI()
     team = gui.getTeam()
     b = Board()
-    a=ai()
+    
     pieces = gui.createPieces()
     # BLACK ALWAYS GOES FIRST
     turn = True
@@ -334,28 +191,69 @@ def main():
         blackTeam = "AI"
     # get possible moves
     moves = b.pMoves
-    # while the game is going, based on who is what color and who's turn it is,
-    # run that particular function from above. It changes the GUI and board in
-    # it's own way.
     while not b.checkGameOver():
         if turn == True and blackTeam == "AI":
-            gui.changeMessage("Please wait, I am choosing a move.")
-            gui.blackAITurn(b, a)
+            gui.blackTurn()
+            #AI TURN HERE!!!
         elif turn == True and blackTeam == "player":
             gui.blackTurn()
-            gui.humanBlackTurn(b)
+            #HUMAN MOVE!!!
         elif turn == False and blackTeam == "AI":
             gui.whiteTurn()
-            gui.humanWhiteTurn(b)
+            #HUMAN MOVE!!
         elif turn == False and blackTeam == "player":
-            gui.changeMessage("Please wait, I am choosing a move.")
-            gui.whiteAITurn(b, a)
-        # after performing the turn, SWITCH it to the other person's turn
+            gui.whiteTurn()
+            # AI TURN HERE!!!
+        
+        print("possible moves: ", moves)
+        fakeCircles = gui.showAllowedMoves(True, turn, moves, gui.getWin())
+
+        if len(moves) == 0:
+            gui.noMoves()
+            continue
+
+        p = gui.mouseClick()
+        if gui.quitButton.clicked(p):
+            gui.win.close()
+            return
+            break
+        xmove = round(p.getX())
+        ymove = round(p.getY())
+        theMove = (ymove, xmove)
+        print("the move is ", theMove)
+        
+        while theMove not in moves:
+            gui.invalidMove()
+            p = gui.mouseClick()
+            if gui.quitButton.clicked(p):
+                gui.win.close()
+                return
+                break
+            xmove = round(p.getX())
+            ymove = round(p.getY())
+            theMove = (ymove, xmove)
+        b.put(theMove)
+        a = b.getToDraw()
+        print("get to draw is ", a)
+        x = a.get('black')
+        for i in x:
+            newPiece = Piece(True, i[0], i[1])
+            gui.drawPiece(newPiece, i[0], i[1])
+        y = a.get('white')
+        for i in y:
+            newPiece = Piece(False, i[0], i[1])
+            gui.drawPiece(newPiece, i[0], i[1])
+
+        for i in fakeCircles:
+            i.disappear()
         if turn == True:
             turn = False
-        elif turn == False:
+        else:
             turn = True
+        gui.updateScore(b)
+        moves = b.pMoves
 
     gui.gameOver(b)
 
 main()
+    
