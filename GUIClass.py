@@ -54,6 +54,8 @@ class GUI:
             let.setFill("white")
             let.draw(self.win)
 
+
+
     def getTeam(self):
         "creates dialogue at the beginning of the game so player can choose\
         team"
@@ -221,8 +223,6 @@ squres.")
         for i in fakeCircles:
             i.disappear()
         self.updateScore(b)
-        # return the new list
-        #return b
 
     def humanWhiteTurn(self, board):
         "same exact thing as human black turn, just different color!"
@@ -281,6 +281,7 @@ squres.")
         board.put(a(board))
         # Go through what the board says to draw and draw it
         a = board.getToDraw()
+        lastMoveMarker.undraw()
         print("get to draw is ", a)
         x = a.get('black')
         for i in x:
@@ -302,6 +303,7 @@ squres.")
         fakeCircles = self.showAllowedMoves(True, False, moves, self.getWin())
         board.put(a(board))
         a = board.getToDraw()
+        lastMoveMarker.undraw()
         print("get to draw is ", a)
         x = a.get('black')
         for i in x:
