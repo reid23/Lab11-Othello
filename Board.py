@@ -4,7 +4,9 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
-
+from functools import lru_cache
+# from ai import ai
+#%%
 class Board:
     MOVES = [
                 (-1, -1),
@@ -17,11 +19,12 @@ class Board:
                 ( 1,  1),
             ]
 
-    def __init__(self, board: list[list[int]] = None):
-        """constructor for board.  Initializes the board in starting position if `board` isn't passed.
+    def __init__(self, board: 'list[list[int]]' = None, curplayer = None):
+        """constructor for board. Initializes the board in starting position if `board` isn't passed.
 
         Args:
-            board (list, optional): the board condition.  Do not pass, only used by the copy method. Defaults to None.
+            board (list, optional): the board condition. Do not pass, only used by the copy method. Defaults to None.
+            curplayer (int, optional): the current player. Do not pass, only used by the copy method. Defaults to None.
         """
         self._score = False
         #here's how the turn switchy thing works:
@@ -36,6 +39,8 @@ class Board:
         if board != None:
             self._board = board
             self.oldBoard = None
+            self._this = curplayer
+            self._other = int(not curplayer)
         else:
             self._board = [[self._empty for _ in range(8)] for _ in range(8)]
             self.oldBoard = Board(self._board) #init to all empty
@@ -43,11 +48,21 @@ class Board:
             self._set(self._other, (3, 4))
             self._set(self._other, (4, 3))
             self._set(self._this,  (4, 4))
-
+        
+        self._vec = False
         self._possibleMoves = {}
         self._calculatePossibleMoves()
         self._findEmptySquares = lambda x: self._empty in x
     
+    def __hash__(self):
+        return hash(tuple(self.toVec()))
+
+    # @lru_cache(100)
+    def toVec(self): #makes 2d list into 1d
+        if not self._vec:
+            self._vec = [[-1, 1, 0][self._board[i][j]] for i in range(8) for j in range(8)]
+        return self._vec
+
     def __str__(self) -> str:
         """human-readable string representation of this board. used by str(board), print(), etc.
 
@@ -70,7 +85,7 @@ class Board:
         out += f"Board(board = [{self._board[0]}"
         for row in self._board[1:]:
             out += f"\n                {row}"
-        out += f"], curColor = {self._colors})"
+        out += f"], curplayer = {self._this})\n"
         return out
     def printWithMoves(self) -> None:
         """prints out the current game, with unique numers in each of the possible moves, so the user can see where they want to move.
@@ -91,14 +106,22 @@ class Board:
         """
         return ['black', 'white'][self._this]
 
+    @property
+    def playerNum(self) -> int:
+        """returns -1 (black) or 1 (white)
+
+        Returns:
+            int: the current player
+        """
+        return (self._this*2)-1
+
     def copy(self):
         """copies this board object.
 
         Returns:
             Board: another board object, identical to this one.
         """
-        return Board(list(map(list.copy, self._board))) #deep copy, slower but neccessary
-
+        return Board(list(map(list.copy, self._board)), self._this) #deep copy, slower but neccessary
 
     def put(self, pos: 'tuple[int]') -> None:
         """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
@@ -109,7 +132,8 @@ class Board:
         if pos == () == tuple(self.pMoves): #if nothing is passed, and there are no legal moves (ie player is allowed to not make a move), just switch the turn.
             self._switchTurn()
             return
-        assert pos in self.pMoves, "Not a legal move.  Expected move in {self.pMoves} but received {pos}."
+        assert pos in self.pMoves, f"Not a legal move.  Expected move in {self.pMoves} but received {pos}."
+        
         self.oldBoard = self.copy()
         self._set(self._this, pos)
         self._flip(self._possibleMoves[pos])
@@ -125,10 +149,16 @@ class Board:
         Returns:
             Board: the copied board with the new piece
         """
-        cp = self.copy()
-        cp.put(pos)
-        return cp
+        cpl = list(map(list.copy, self._board)) #from self.copy()
+        for i in self._possibleMoves[pos]: #we already calculated the flips so no need to recalculate
+            cpl[i[0]][i[1]]=self._this
 
+        cpl[pos[0]][pos[1]]=self._this
+        return Board(cpl, self._other) #just create board with things already flipped
+
+        # cp = self.copy()
+        # cp.put(pos)
+        # return cp
 
     def _flip(self, squares: 'tuple[tuple[int]]', curpos: 'tuple[int]' = (0, 0)) -> None:
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
@@ -190,7 +220,6 @@ class Board:
         self._board[pos[0]][pos[1]] = val
 
     # @jit
-    # @profile
     def _findFlipsInDir(self, mov: 'tuple[int]', dir: 'tuple[int]') -> 'list[tuple[int]]':
         """checks whether pieces can be captured in a `dir`ection for `mov`
 
@@ -204,9 +233,10 @@ class Board:
         toFlip = []
         
         while True:
-            mov = [mov[0]+dir[0], mov[1]+dir[1]] #move the focused square one step in `dir`
+            mov = [mov[0]+dir[0], mov[1]+dir[1]]
+
+            piece = self._board[mov[0]][mov[1]] if max(mov)<=7 and min(mov)>=0 else -1 #get the piece
             
-            piece = self._get(mov) #get the piece
             if piece == self._empty or piece == -1: #when mov is out of bounds or there's no piece at this square
                 return []
             if piece == self._this: #if it's the same color, there's a bracket!  if there's no space between the two sides, though, it'll still just return an empty list.
@@ -215,7 +245,6 @@ class Board:
                 toFlip.append(mov)
 
     # @jit
-    # @profile
     def _isLegal(self, mov: 'tuple[int]', curpos: 'tuple[int]' = (0,0)) -> 'list[tuple[int]]':
         """checks whether the given move (relative to curpos) is legal or not. Returns squares to flip if it is legal, to remove extra computation later.
 
@@ -241,7 +270,7 @@ class Board:
         self._this, self._other = self._other, self._this
         self._calculatePossibleMoves()
         self._score = False
-
+        self._vec = False
     def getToDraw(self) -> 'dict[str: list[tuple[int]]]':
         """returns which pieces should be drawn, and their locations.
 
@@ -260,7 +289,7 @@ class Board:
             bool: whether or not other is a board that is identical to this one.
         """
         try:
-            return other.board==self._board
+            return other._board==self._board
         except:
             raise NotImplementedError(f"Expected `other` of type Board, received {other.__class__.__name__}")
 
@@ -289,14 +318,14 @@ class Board:
         """checks whether the game is over.
 
         Returns:
-            bool: whether all squares are full
+            bool: whether the game is over
         """
-        if True in map(self._findEmptySquares, self._board): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
-            return True 
-        if self.pMoves == (): #if current player's possible moves are empty
+        if not (True in map(self._findEmptySquares, self._board)): #if there's no empty squares left, this is a shortcut to quickly catch this possibility. Not strictly needed.
+            return True
+        if len(self.pMoves) == 0: #if current player's possible moves are empty
             cp = self.copy()
             cp._switchTurn()
-            if cp.pMoves == (): #and next player's possible moves are empty
+            if len(cp.pMoves)==0: #and next player's possible moves are empty
                 return True  #then the game is over
         return False
     
@@ -316,14 +345,40 @@ class Board:
         return self._score
 
 def main():
+    a=ai()
     b=Board()
-    while b.checkGameOver()==True:
+    aiPlayer='black'
+
+    #if ai is white, run initial move
+    if aiPlayer=='white':
+        move = a(b)
         print("board:")
         b.printWithMoves()
-        b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
-        print(b.getToDraw())
+
+        print(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: {b.pMoves.index(move)}: {move}")
+        b.put(move)
+
         print("\n\nnext turn!")
-    score = b.score()
+
+
+    while not b.checkGameOver():
+        print("board:")
+        b.printWithMoves()
+        if len(b.pMoves) == 0: continue
+        b.put(b.pMoves[int(input(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: "))])
+
+        print("\n\nnext turn!")
+
+        move = a(b)
+        print("board:")
+        b.printWithMoves()
+        if len(move) == 0: continue
+        print(f"{b.player.title()}, choose your move from {list(range(len(b.pMoves)))}: {b.pMoves.index(move)}: {move}")
+        b.put(move)
+
+        print("\n\nnext turn!")
+
+    score = b.score
     if score[0]>score[1]:
         outcome = 'Black won.'
     elif score[0]<score[1]:
@@ -335,8 +390,14 @@ def main():
 
 
 if __name__ == '__main__':
+    from ai import ai
+    # b=Board()
+    # from timeit import timeit as t
+    # from time import sleep
+    # sleep(2)
+    # print(t('b._calculatePossibleMoves()', number = 10000, globals = globals()))
     try:
         main()
     except KeyboardInterrupt:
         print("\nExiting.")
-
+# %%
