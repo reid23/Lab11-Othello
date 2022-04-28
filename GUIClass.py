@@ -285,7 +285,7 @@ squres.")
         # show what the ai COULD do
         fakeCircles = self.showAllowedMoves(True, True, moves, self.getWin())
         # AI MAKES A TURN!!!
-        aiMove = a(board, 2)
+        aiMove = a(board)
         board.put(aiMove)
         # Go through what the board says to draw and draw it
         a = board.getToDraw()
@@ -312,7 +312,7 @@ squres.")
         moves = board.pMoves
         a = ai
         fakeCircles = self.showAllowedMoves(True, False, moves, self.getWin())
-        aiMove = a(board, 2)
+        aiMove = a(board)
         board.put(aiMove)
         a = board.getToDraw()
         self.lastMoveMarker.undraw()
