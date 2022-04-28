@@ -33,12 +33,24 @@ class ai:
     def _weights(self, board): #returns how good it is for white
         return sum(map(math.prod, zip(self.mat, board.toVec()))) #dot product of the weights and the board
 
+
+    #ok here's what this does:
+    #   get raw score based on positions and fixed weights (from __init__; ie weight corners more and next to corners less)
+    #   get difference in score between black and white (how much you're winning by)
+    #   get the number of possible moves, and negate it if the current player isn't white, because we want to evaluate favorability for white.
     def _heuristic(self, board): #evaluates the favorability of a board, FOR WHITE
             weights = self._weights(board)*board.playerNum #how good it is for white
             out = weights*1.8 \
                 + (board.score[1] - board.score[0]) \
                 + board.playerNum*(len(board.pMovesVerbose)) #pMovesVerbose is faster
             return out
+
+
+    #this basically goes down the tree until it gets to the max depth.
+    # then the bottom board returns its value according to the heuristic method, and the boards
+    # in higher layers return the value of the best move you could take from there.
+    # everything is negated if the current player is the other player, because then we're trying to find 
+    # their maximum score, which is the minimum weight for us.
     # @lru_cache(None)
     def _calc(self, b, curDepth, maxDepth, player): #recursive search algorithm
         if curDepth == maxDepth:
@@ -56,7 +68,8 @@ class ai:
             return self._heuristic(b.putCopy(b.pMoves[values.index(min(values))])) #else return the worst move for us
 
 
-    
+    # this just uses _calc to find the best possible move.  If there are no possible moves, it returns (),
+    # which can be passed into board.put() just fine to convey that meaning.
     def __call__(self, b, depth = 4): #this is how you actually get a result
 
         start = time()
