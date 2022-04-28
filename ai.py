@@ -66,6 +66,7 @@ class ai:
             return ()
 
 if __name__ == '__main__':
+    from Board import Board
     board=Board()
     a=ai()
     while not board.checkGameOver():
