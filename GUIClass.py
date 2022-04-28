@@ -375,4 +375,6 @@ def main():
 
     gui.gameOver(b)
 
-main()
+if __name__ == '__main__': main()
+    
+

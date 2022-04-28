@@ -5,6 +5,13 @@ from graphics import *
 class Piece:
 
     def __init__(self, color, y, x):
+        """augh added a docstring bc i keep forgetting true vs false, sorry i know im not supposed to touch non-me code
+
+        Args:
+            color (bool): true if black, false if white 
+            y (int): y location, in window coords
+            x (int): x location, in window coords
+        """
         self.color = color
         self.x = x
         self.y = y
@@ -16,7 +23,7 @@ class Piece:
             self.circle.setFill("white")
 
     def fake(self, win):
-        self.circle.setFill(color_rgb(198, 245, 232))
+        self.circle.setFill('gray')
         self.draw(win)
 
     def disappear(self):
