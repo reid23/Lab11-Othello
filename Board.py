@@ -43,7 +43,7 @@ class Board:
             self._other = int(not curplayer)
         else:
             self._board = [[self._empty for _ in range(8)] for _ in range(8)]
-            self.oldBoard = Board(self._board) #init to all empty
+            self.oldBoard = Board(list(map(list.copy, self._board))) #init to all empty
             self._set(self._this,  (3, 3))
             self._set(self._other, (3, 4))
             self._set(self._other, (4, 3))
@@ -347,7 +347,8 @@ class Board:
 def main():
     a=ai()
     b=Board()
-    aiPlayer='black'
+
+    aiPlayer='black' #set this to change who goes first
 
     #if ai is white, run initial move
     if aiPlayer=='white':
@@ -378,6 +379,8 @@ def main():
 
         print("\n\nnext turn!")
 
+
+    #report end score
     score = b.score
     if score[0]>score[1]:
         outcome = 'Black won.'
@@ -391,11 +394,7 @@ def main():
 
 if __name__ == '__main__':
     from ai import ai
-    # b=Board()
-    # from timeit import timeit as t
-    # from time import sleep
-    # sleep(2)
-    # print(t('b._calculatePossibleMoves()', number = 10000, globals = globals()))
+
     try:
         main()
     except KeyboardInterrupt:
