@@ -4,6 +4,9 @@ Author: Reid
 This file is a board class.  To get what you need to draw, do Board.getToDraw(). To make a move, use Board.put().
 If there were no possible moves, but you still want to change whose turn it is, you can just call Board.switchTurn().  But Board.put() does this automatically.
 '''
+from functools import lru_cache
+# from ai import ai
+#%%
 class Board:
     MOVES = [
                 (-1, -1),
@@ -120,7 +123,6 @@ class Board:
         """
         return Board(list(map(list.copy, self._board)), self._this) #deep copy, slower but neccessary
 
-
     def put(self, pos: 'tuple[int]') -> None:
         """places a piece at `pos`. The piece's color is the current turn. This action toggles the turn. If pos is an empty tuple, no piece is placed, but the turn is still switched.
 
@@ -157,7 +159,6 @@ class Board:
         # cp = self.copy()
         # cp.put(pos)
         # return cp
-
 
     def _flip(self, squares: 'tuple[tuple[int]]', curpos: 'tuple[int]' = (0, 0)) -> None:
         """flips the given squares.  Square location is relative to curpos, which defaults to (0,0) (aka absolute)
